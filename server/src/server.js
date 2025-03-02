@@ -1,30 +1,21 @@
 import { createServer } from "http";
-import { Server } from "socket.io";
+import express from "express";
 
 import connectDB from "./DB/connectDB.js";
 import app from "./app.js";
+import path from "path";
 
 const PORT = process.env.PORT || 8000;
 
 const server = createServer(app);
 
-const io = new Server(server, {
-  cors: {
-    origin: ["http://localhost:5173"],
-    methods: ["GET", "POST", "PATCH"],
-    credentials: true,
-  },
-});
+if (process.env.NODE_ENV) {
+  app.use(express.static(path.join(__dirname), "/client/dist"));
 
-io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.id}`);
-
-  socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.id}`);
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "client", "dist", "index.html"));
   });
-});
-
-export {io}
+}
 
 server.listen(PORT, async () => {
   await connectDB();
